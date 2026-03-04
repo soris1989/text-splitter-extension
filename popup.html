@@ -1,0 +1,22 @@
+<!doctype html>
+<html dir="rtl" lang="he">
+    <head>
+        <meta charset="UTF-8" />
+        <title>חלוקת טקסט</title>
+
+        <link rel="stylesheet" href="public/css/style.css" />
+    </head>
+    <body>
+        <textarea id="textInput" placeholder="הדבק טקסט של OCR כאן..."></textarea>
+        <input type="number" id="wordCount" placeholder="מילים לכל פסקה" value="90" min="1" />
+        <select id="languageSelect">
+            <option value="he">עברית</option>
+            <option value="en">אנגלית</option>
+        </select>
+        <button id="generatePdf">צור PDF</button>
+
+        <script src="public/js/jquery.min.js"></script>
+        <script src="public/js/jspdf.umd.min.js"></script>
+        <script src="public/js/popup.js"></script>
+    </body>
+</html>

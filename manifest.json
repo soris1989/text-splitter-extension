@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Text Splitter PDF",
+    "version": "1.0",
+    "description": "Split text into word chunks and export to PDF",
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "permissions": []
+}
