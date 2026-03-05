@@ -28,12 +28,18 @@ $(document).ready(function () {
 
         // אם עברית וה-checkbox מסומן – הסר ניקוד
         if (lang === "he" && $("#removeNikkudCheckbox").is(":checked")) {
-            title = removeHebrewNikkud(title);
-            text = removeHebrewNikkud(text);
+            title = await removeHebrewNikkud(title);
+            text = await removeHebrewNikkud(text);
         }
 
         // חלוקת הטקסט למקטעים לפי מספר מילים אמיתי
-        let rawTokens = text.split(/\s+/); // מפריד לפי רווחים
+        // let rawTokens = text.split(/\s+/); // מפריד לפי רווחים
+
+        // קודם מסירים רווחים כפולים וקפיצות שורה
+        let cleanedText = text.replace(/\s+/g, " ").trim();
+
+        // עכשיו מפרידים למילים
+        let rawTokens = cleanedText.split(" ");
         let chunks = [];
         let currentChunk = [];
         let wordCounter = 0;
@@ -201,7 +207,44 @@ $(document).ready(function () {
         }
     }
 
-    function removeHebrewNikkud(text) {
-        return text.replace(/[\u0591-\u05C7]/g, "");
+    // function removeHebrewNikkud(text) {
+    //     return text.replace(/[\u0591-\u05C7]/g, "");
+    // }
+
+    async function removeHebrewNikkud(text) {
+        try {
+            const response = await fetch(
+                "https://remove-nikud-2-0.loadbalancer2.dicta.org.il/api",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        data: text,
+                        genre: "rabbinic",
+                        maqaf: 1,
+                        fQQ: true,
+                    }),
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok: " + response.statusText);
+            }
+
+            const result = await response.json();
+
+            // לפי ה־API, הניקוד המוסר מוחזר כנראה ב־result.data
+            return result.results || text;
+        } catch (err) {
+            console.error("Error removing Hebrew nikud:", err);
+            return text; // במקרה של שגיאה, מחזיר את הטקסט המקורי
+        }
+    }
+
+    function normalizeSpaces(text) {
+        // מחליף כל רצף של רווחים, טאבים או קפיצות שורה ברווח אחד
+        return text.replace(/\s+/g, " ").trim();
     }
 });
