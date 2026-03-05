@@ -26,20 +26,18 @@ $(document).ready(function () {
             return;
         }
 
+        text = text.replace(/\s+/g, " ").trim();
+
         // אם עברית וה-checkbox מסומן – הסר ניקוד
         if (lang === "he" && $("#removeNikkudCheckbox").is(":checked")) {
             title = await removeHebrewNikkud(title);
             text = await removeHebrewNikkud(text);
         }
 
+        console.log("Cleaned Text:", text); // בדיקת הטקסט לאחר ניקוי רווחים
+
         // חלוקת הטקסט למקטעים לפי מספר מילים אמיתי
-        // let rawTokens = text.split(/\s+/); // מפריד לפי רווחים
-
-        // קודם מסירים רווחים כפולים וקפיצות שורה
-        let cleanedText = text.replace(/\s+/g, " ").trim();
-
-        // עכשיו מפרידים למילים
-        let rawTokens = cleanedText.split(" ");
+        let rawTokens = text.split(" ");
         let chunks = [];
         let currentChunk = [];
         let wordCounter = 0;
@@ -57,6 +55,9 @@ $(document).ready(function () {
                 wordCounter = 0;
             }
         });
+
+        console.log(rawTokens); // בדיקת הטוקנים הגולמיים
+        console.log(chunks); // בדיקת המקטעים לאחר החלוקה
 
         // אם נשארו טוקנים אחרי הספירה
         if (currentChunk.length > 0) {
