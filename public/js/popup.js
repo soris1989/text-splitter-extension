@@ -34,8 +34,6 @@ $(document).ready(function () {
             text = await removeHebrewNikkud(text);
         }
 
-        console.log("Cleaned Text:", text); // בדיקת הטקסט לאחר ניקוי רווחים
-
         // חלוקת הטקסט למקטעים לפי מספר מילים אמיתי
         let rawTokens = text.split(" ");
         let chunks = [];
