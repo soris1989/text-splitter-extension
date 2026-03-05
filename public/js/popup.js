@@ -32,11 +32,29 @@ $(document).ready(function () {
             text = removeHebrewNikkud(text);
         }
 
-        // חלוקת הטקסט למקטעים
-        let words = text.split(/\s+/);
+        // חלוקת הטקסט למקטעים לפי מספר מילים אמיתי
+        let rawTokens = text.split(/\s+/); // מפריד לפי רווחים
         let chunks = [];
-        for (let i = 0; i < words.length; i += wordsPerChunk) {
-            chunks.push(words.slice(i, i + wordsPerChunk).join(" "));
+        let currentChunk = [];
+        let wordCounter = 0;
+
+        rawTokens.forEach((token) => {
+            currentChunk.push(token); // שומר את הטוקן עם הפיסוק
+            // בודק אם יש לפחות אות או מספר במילה (עברית/אנגלית/ספרה)
+            if (/[A-Za-z\u0590-\u05FF0-9]/.test(token)) {
+                wordCounter++;
+            }
+
+            if (wordCounter === wordsPerChunk) {
+                chunks.push(currentChunk.join(" ")); // שומר פיסקה
+                currentChunk = [];
+                wordCounter = 0;
+            }
+        });
+
+        // אם נשארו טוקנים אחרי הספירה
+        if (currentChunk.length > 0) {
+            chunks.push(currentChunk.join(" "));
         }
 
         // יצירת PDF
@@ -74,7 +92,7 @@ $(document).ready(function () {
                 align: lang === "he" ? "right" : "left",
             });
 
-            y += 7; // רווח אחרי הכותרת
+            y += 9; // רווח אחרי הכותרת
 
             doc.setFontSize(lang === "he" ? 14 : 12);
         }
