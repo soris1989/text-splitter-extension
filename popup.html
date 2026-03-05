@@ -4,16 +4,80 @@
         <meta charset="UTF-8" />
         <title>חלוקת טקסט</title>
 
+        <!-- Bootstrap 5 RTL -->
+        <link rel="stylesheet" href="public/css/bootstrap5.rtl.min.css" />
         <link rel="stylesheet" href="public/css/style.css" />
     </head>
-    <body>
-        <textarea id="textInput" placeholder="הדבק טקסט של OCR כאן..."></textarea>
-        <input type="number" id="wordCount" placeholder="מילים לכל פסקה" value="90" min="1" />
-        <select id="languageSelect">
-            <option value="he">עברית</option>
-            <option value="en">אנגלית</option>
-        </select>
-        <button id="generatePdf">צור PDF</button>
+    <body class="bg-light">
+        <div class="container-fluid py-4">
+            <div class="mb-2 text-end">
+                <button id="resetPopup" class="btn btn-secondary btn-sm" title="אתחול">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 16 16"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                    >
+                        <path
+                            d="M7.94.56a8.05 8.05 0 0 1 6.82 3.64V1.55H16V5a1.16 1.16 0 0 1-1.15 1.15h-3.44V4.9h2.32a6.79 6.79 0 0 0-5.79-3.1A6.48 6.48 0 0 0 1.24 8a6.48 6.48 0 0 0 6.7 6.2 6.48 6.48 0 0 0 6.7-6.2h1.24a7.71 7.71 0 0 1-7.94 7.44A7.71 7.71 0 0 1 0 8 7.71 7.71 0 0 1 7.94.56z"
+                        />
+                    </svg>
+                    <span class="ms-1">אתחול</span>
+                </button>
+            </div>
+
+            <h4 class="mb-4">חלוקת טקסט ל-PDF</h4>
+
+            <div class="mb-3">
+                <label for="titleInput" class="form-label">כותרת</label>
+                <input
+                    type="text"
+                    id="titleInput"
+                    class="form-control"
+                    placeholder="הכנס כותרת למסמך"
+                />
+            </div>
+
+            <!-- טקסט -->
+            <div class="mb-3">
+                <label for="textInput" class="form-label">טקסט</label>
+                <textarea
+                    id="textInput"
+                    class="form-control"
+                    rows="6"
+                    placeholder="הדבק טקסט של OCR כאן..."
+                ></textarea>
+            </div>
+
+            <!-- מספר מילים -->
+            <div class="mb-3">
+                <label for="wordCount" class="form-label">מילים לכל פסקה</label>
+                <input type="number" id="wordCount" class="form-control" value="90" min="1" />
+            </div>
+
+            <!-- בחירת שפה -->
+            <div class="mb-3">
+                <label for="languageSelect" class="form-label">שפה</label>
+                <select id="languageSelect" class="form-select">
+                    <option value="he">עברית</option>
+                    <option value="en">אנגלית</option>
+                </select>
+            </div>
+
+            <!-- הסרת ניקוד -->
+            <div id="removeNikkudWrapper" class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="removeNikkudCheckbox" />
+                <label class="form-check-label" for="removeNikkudCheckbox">
+                    הסר ניקוד מהטקסט
+                </label>
+            </div>
+
+            <!-- כפתור -->
+            <div class="d-grid">
+                <button id="generatePdf" class="btn btn-primary">צור PDF</button>
+            </div>
+        </div>
 
         <script src="public/js/jquery.min.js"></script>
         <script src="public/js/jspdf.umd.min.js"></script>

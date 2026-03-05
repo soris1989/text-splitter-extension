@@ -1,8 +1,11 @@
 $(document).ready(function () {
-    $("#generatePdf").click(async function () {
-        let lang = $("#languageSelect").val();
+    loadSavedData();
+
+    $("#generatePdf").on("click", async function () {
+        let title = $("#titleInput").val().trim();
         let text = $("#textInput").val().trim();
         let wordsPerChunk = parseInt($("#wordCount").val());
+        let lang = $("#languageSelect").val();
 
         // בדיקות שגיאות
         if (!text || text === "") {
@@ -21,6 +24,12 @@ $(document).ready(function () {
                     : "Please enter a valid word count greater than 0.",
             );
             return;
+        }
+
+        // אם עברית וה-checkbox מסומן – הסר ניקוד
+        if (lang === "he" && $("#removeNikkudCheckbox").is(":checked")) {
+            title = removeHebrewNikkud(title);
+            text = removeHebrewNikkud(text);
         }
 
         // חלוקת הטקסט למקטעים
@@ -58,6 +67,18 @@ $(document).ready(function () {
         }
 
         let y = 20;
+        if (title) {
+            doc.setFontSize(lang === "he" ? 22 : 20);
+
+            doc.text(title, lang === "he" ? 200 : 10, y, {
+                align: lang === "he" ? "right" : "left",
+            });
+
+            y += 7; // רווח אחרי הכותרת
+
+            doc.setFontSize(lang === "he" ? 14 : 12);
+        }
+
         let lineHeight = 5.5; // גובה שורה
         chunks.forEach((chunk) => {
             let lines = doc.splitTextToSize(chunk, 180);
@@ -80,4 +101,89 @@ $(document).ready(function () {
         const fileName = `split-text_${Date.now()}.pdf`;
         doc.save(fileName);
     });
+
+    $("#languageSelect").on("change", function () {
+        let lang = $(this).val();
+
+        if (lang === "he") {
+            $("#removeNikkudWrapper").show();
+            $("#removeNikkudCheckbox").prop("checked", false);
+        } else {
+            $("#removeNikkudWrapper").hide();
+            $("#removeNikkudCheckbox").prop("checked", false);
+        }
+    });
+
+    // שדות טקסט וכותרת
+    $("#textInput, #titleInput").on("input", function () {
+        savePopupData();
+    });
+
+    // מספר מילים
+    $("#wordCount").on("input", function () {
+        savePopupData();
+    });
+
+    // select שפה
+    $("#languageSelect").on("change", function () {
+        savePopupData();
+    });
+
+    // checkbox
+    $("#removeNikkudCheckbox").on("change", function () {
+        savePopupData();
+    });
+
+    $("#resetPopup").on("click", function () {
+        $("#titleInput").val("");
+        $("#textInput").val("");
+        $("#wordCount").val("90");
+        $("#languageSelect").val("he");
+        $("#removeNikkudCheckbox").prop("checked", false);
+
+        localStorage.removeItem("text_splitter_extension_title");
+        localStorage.removeItem("text_splitter_extension_text");
+        localStorage.removeItem("text_splitter_extension_wordCount");
+        localStorage.removeItem("text_splitter_extension_language");
+        localStorage.removeItem("text_splitter_extension_removeNikkud");
+    });
+
+    function savePopupData() {
+        localStorage.setItem("text_splitter_extension_title", $("#titleInput").val());
+        localStorage.setItem("text_splitter_extension_text", $("#textInput").val());
+        localStorage.setItem("text_splitter_extension_wordCount", $("#wordCount").val());
+        localStorage.setItem("text_splitter_extension_language", $("#languageSelect").val());
+        localStorage.setItem(
+            "text_splitter_extension_removeNikkud",
+            $("#removeNikkudCheckbox").is(":checked"),
+        );
+    }
+
+    function loadSavedData() {
+        let savedTitle = localStorage.getItem("text_splitter_extension_title");
+        let savedText = localStorage.getItem("text_splitter_extension_text");
+        let savedWordCount = localStorage.getItem("text_splitter_extension_wordCount");
+        let savedLanguage = localStorage.getItem("text_splitter_extension_language");
+        let savedRemoveNikkud = localStorage.getItem("text_splitter_extension_removeNikkud");
+
+        if (savedTitle) {
+            $("#titleInput").val(savedTitle);
+        }
+        if (savedText) {
+            $("#textInput").val(savedText);
+        }
+        if (savedWordCount) {
+            $("#wordCount").val(savedWordCount);
+        }
+        if (savedLanguage) {
+            $("#languageSelect").val(savedLanguage);
+        }
+        if (savedRemoveNikkud) {
+            $("#removeNikkudCheckbox").prop("checked", JSON.parse(savedRemoveNikkud));
+        }
+    }
+
+    function removeHebrewNikkud(text) {
+        return text.replace(/[\u0591-\u05C7]/g, "");
+    }
 });
