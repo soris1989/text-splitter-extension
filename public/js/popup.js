@@ -7,122 +7,133 @@ $(document).ready(function () {
         let wordsPerChunk = parseInt($("#wordCount").val());
         let lang = $("#languageSelect").val();
 
-        // בדיקות שגיאות
-        if (!text || text === "") {
-            alert(
-                lang === "he"
-                    ? "יש להזין טקסט לפני יצירת ה-PDF."
-                    : "Please enter text before generating PDF.",
-            );
-            return;
-        }
+        const $btn = $(this);
+        const originalText = $btn.text();
 
-        if (!wordsPerChunk || wordsPerChunk <= 0) {
-            alert(
-                lang === "he"
-                    ? "יש להזין מספר מילים חוקי הגדול מ־0."
-                    : "Please enter a valid word count greater than 0.",
-            );
-            return;
-        }
+        $btn.prop("disabled", true);
+        $btn.text("מוריד קובץ...");
 
-        text = text.replace(/\s+/g, " ").trim();
-
-        // אם עברית וה-checkbox מסומן – הסר ניקוד
-        if (lang === "he" && $("#removeNikkudCheckbox").is(":checked")) {
-            title = await removeHebrewNikkud(title);
-            text = await removeHebrewNikkud(text);
-        }
-
-        // חלוקת הטקסט למקטעים לפי מספר מילים אמיתי
-        let rawTokens = text.split(" ");
-        let chunks = [];
-        let currentChunk = [];
-        let wordCounter = 0;
-
-        rawTokens.forEach((token) => {
-            currentChunk.push(token); // שומר את הטוקן עם הפיסוק
-            // בודק אם יש לפחות אות או מספר במילה (עברית/אנגלית/ספרה)
-            if (/[A-Za-z\u0590-\u05FF0-9]/.test(token)) {
-                wordCounter++;
+        try {
+            // בדיקות שגיאות
+            if (!text || text === "") {
+                alert(
+                    lang === "he"
+                        ? "יש להזין טקסט לפני יצירת ה-PDF."
+                        : "Please enter text before generating PDF.",
+                );
+                return;
             }
 
-            if (wordCounter === wordsPerChunk) {
-                chunks.push(currentChunk.join(" ")); // שומר פיסקה
-                currentChunk = [];
-                wordCounter = 0;
+            if (!wordsPerChunk || wordsPerChunk <= 0) {
+                alert(
+                    lang === "he"
+                        ? "יש להזין מספר מילים חוקי הגדול מ־0."
+                        : "Please enter a valid word count greater than 0.",
+                );
+                return;
             }
-        });
 
-        console.log(rawTokens); // בדיקת הטוקנים הגולמיים
-        console.log(chunks); // בדיקת המקטעים לאחר החלוקה
+            text = text.replace(/\s+/g, " ").trim();
 
-        // אם נשארו טוקנים אחרי הספירה
-        if (currentChunk.length > 0) {
-            chunks.push(currentChunk.join(" "));
-        }
-
-        // יצירת PDF
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        if (lang === "he") {
-            // טעינת הפונט
-            const fontUrl = "public/fonts/Assistant-Regular.ttf";
-            const response = await fetch(fontUrl);
-            const buffer = await response.arrayBuffer();
-            const bytes = new Uint8Array(buffer);
-            let binary = "";
-            for (let i = 0; i < bytes.byteLength; i++) {
-                binary += String.fromCharCode(bytes[i]);
+            // אם עברית וה-checkbox מסומן – הסר ניקוד
+            if (lang === "he" && $("#removeNikkudCheckbox").is(":checked")) {
+                title = await removeHebrewNikkud(title);
+                text = await removeHebrewNikkud(text);
             }
-            const fontBase64 = btoa(binary);
 
-            doc.addFileToVFS("Assistant-Regular.ttf", fontBase64);
-            doc.addFont("Assistant-Regular.ttf", "Assistant", "normal");
-            doc.setFont("Assistant");
-            doc.setFontSize(14);
-            doc.setR2L(true); // RTL
-        } else {
-            doc.setFont("helvetica");
-            doc.setFontSize(12);
-            doc.setR2L(false); // LTR
-        }
+            // חלוקת הטקסט למקטעים לפי מספר מילים אמיתי
+            let rawTokens = text.split(" ");
+            let chunks = [];
+            let currentChunk = [];
+            let wordCounter = 0;
 
-        let y = 20;
-        if (title) {
-            doc.setFontSize(lang === "he" ? 22 : 20);
+            rawTokens.forEach((token) => {
+                currentChunk.push(token); // שומר את הטוקן עם הפיסוק
+                // בודק אם יש לפחות אות או מספר במילה (עברית/אנגלית/ספרה)
+                if (/[A-Za-z\u0590-\u05FF0-9]/.test(token)) {
+                    wordCounter++;
+                }
 
-            doc.text(title, lang === "he" ? 200 : 10, y, {
-                align: lang === "he" ? "right" : "left",
+                if (wordCounter === wordsPerChunk) {
+                    chunks.push(currentChunk.join(" ")); // שומר פיסקה
+                    currentChunk = [];
+                    wordCounter = 0;
+                }
             });
 
-            y += 9; // רווח אחרי הכותרת
+            console.log(rawTokens); // בדיקת הטוקנים הגולמיים
+            console.log(chunks); // בדיקת המקטעים לאחר החלוקה
 
-            doc.setFontSize(lang === "he" ? 14 : 12);
-        }
-
-        let lineHeight = 5.5; // גובה שורה
-        chunks.forEach((chunk) => {
-            let lines = doc.splitTextToSize(chunk, 180);
-
-            if (y + lines.length * lineHeight > 280) {
-                doc.addPage();
-                y = 20;
+            // אם נשארו טוקנים אחרי הספירה
+            if (currentChunk.length > 0) {
+                chunks.push(currentChunk.join(" "));
             }
 
-            // כתיבת הטקסט
-            doc.text(lines, lang === "he" ? 200 : 10, y, {
-                align: lang === "he" ? "right" : "left",
+            // יצירת PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            if (lang === "he") {
+                // טעינת הפונט
+                const fontUrl = "public/fonts/Assistant-Regular.ttf";
+                const response = await fetch(fontUrl);
+                const buffer = await response.arrayBuffer();
+                const bytes = new Uint8Array(buffer);
+                let binary = "";
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                const fontBase64 = btoa(binary);
+
+                doc.addFileToVFS("Assistant-Regular.ttf", fontBase64);
+                doc.addFont("Assistant-Regular.ttf", "Assistant", "normal");
+                doc.setFont("Assistant");
+                doc.setFontSize(14);
+                doc.setR2L(true); // RTL
+            } else {
+                doc.setFont("helvetica");
+                doc.setFontSize(12);
+                doc.setR2L(false); // LTR
+            }
+
+            let y = 20;
+            if (title) {
+                doc.setFontSize(lang === "he" ? 22 : 20);
+
+                doc.text(title, lang === "he" ? 200 : 10, y, {
+                    align: lang === "he" ? "right" : "left",
+                });
+
+                y += 9; // רווח אחרי הכותרת
+
+                doc.setFontSize(lang === "he" ? 14 : 12);
+            }
+
+            let lineHeight = 5.5; // גובה שורה
+            chunks.forEach((chunk) => {
+                let lines = doc.splitTextToSize(chunk, 180);
+
+                if (y + lines.length * lineHeight > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                // כתיבת הטקסט
+                doc.text(lines, lang === "he" ? 200 : 10, y, {
+                    align: lang === "he" ? "right" : "left",
+                });
+
+                // עדכון y – רווח של שורה אחת בלבד בין פסקאות
+                y += lines.length * lineHeight; // הפסקה עצמה
+                y += lineHeight; // רווח של שורה אחת בלבד
             });
 
-            // עדכון y – רווח של שורה אחת בלבד בין פסקאות
-            y += lines.length * lineHeight; // הפסקה עצמה
-            y += lineHeight; // רווח של שורה אחת בלבד
-        });
-
-        const fileName = `split-text_${Date.now()}.pdf`;
-        doc.save(fileName);
+            const fileName = `split-text_${Date.now()}.pdf`;
+            doc.save(fileName);
+        } finally {
+            $btn.prop("disabled", false);
+            $btn.text(originalText);
+        }
     });
 
     $("#languageSelect").on("change", function () {
